@@ -60,6 +60,14 @@ class Admin extends BaseController
                 'capability' => 'manage_options',
                 'menu_slug' => 'rexpress_settings',
                 'callback' => array( $this->callbacks, 'adminSettings'),
+            ),
+            array(
+                'parent_slug' => 'rexpress_plugin',
+                'page_title' => 'Actions',
+                'menu_title' => 'Actions',
+                'capability' => 'manage_options',
+                'menu_slug' => 'rexpress_actions',
+                'callback' => array( $this->callbacks, 'adminActions'),
             )
         );
     }

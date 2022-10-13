@@ -19,8 +19,10 @@ class RetailExpressApiController
         
         if(isset($_COOKIE['auth_key'])) {
             
-            add_action('init', array($this, 'create_woo_products'), 110);
-            
+            // add_action('init', array($this, 'create_woo_products'), 110);
+            add_action("wp_ajax_create_woo_products", array($this, 'create_woo_products'));
+            add_action("wp_ajax_nopriv_create_woo_products", array($this, 'no_access'));
+
         }else{
 
             $access_token = '';
@@ -66,7 +68,7 @@ class RetailExpressApiController
 
     public function get_products ( $page = 1 ) {
 
-        $page_size = 100;
+        $page_size = 250;
         $inventory = true;
 
 
@@ -119,8 +121,6 @@ class RetailExpressApiController
 
             $arr[$key]['price'] = $product->sell_price_inc;
 
-            $arr[$key]['weight'] = $product->weight;
-
             $arr[$key]['parent'] = $product->custom_properties;
 
         }
@@ -128,17 +128,21 @@ class RetailExpressApiController
 
         return $arr;
     }
+    public function no_access() {
+        echo "Tricky bastard, get the fuck out!";
+        die;
+    }
 
     public function create_woo_products( ) {
         
         $products = $this->map_products_info();
 
-
         foreach ($products as $key => $product) {
         
             if( count( $product['parent'] ) > 0 ){
 
-                
+                // echo $product['product_name'] . " has been successfully updated!";
+                echo "<p>" . $product['product_name'] . " variable product has been successfully added to the database. </p>";
             }else{ 
                 
                 // Check if product is existing!
@@ -154,9 +158,7 @@ class RetailExpressApiController
                             'post_type' => 'product'
                         )
                     );
-    
-    
-    
+        
                     wp_set_object_terms( $post_id, 'simple', 'product_type' );
                     update_post_meta( $post_id, '_visibility', 'visible' );
                     update_post_meta( $post_id, '_stock_status', 'instock');
@@ -183,14 +185,17 @@ class RetailExpressApiController
                     update_post_meta( $post_id, '_manage_stock', 'yes' ); 
                     wc_update_product_stock($post_id, $product['stock'], 'set');
                     update_post_meta( $post_id, '_backorders', 'no' );
+
+
+                }else{
+                    
                 }
+                echo "<p>" . $product['product_name'] . " product has been successfully added to the database. </p>";
             }
-                
-            
 
         }
 
-        
+        wp_die();
     }
 
 }
