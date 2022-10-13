@@ -16,5 +16,9 @@ class AdminCallbacks extends BaseController
     public function adminSettings(){    
         return require_once( "$this->plugin_path/templates/settings.php" );
     }
+
+    public function adminActions(){    
+        return require_once( "$this->plugin_path/templates/actions.php" );
+    }
 }
 
