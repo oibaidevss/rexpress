@@ -1,15 +1,30 @@
 <h1>Update Data in WooCommerce</h1>
 
 <div class="w-box">
+
     <div class="status-container">
-        <span class="circle"></span>
-        <div><span>Connected</span></div>
+        <span class="circle" style="<?php echo isset($_COOKIE['auth_key']) ? '': 'background-color: red'; ?>"></span>
+        <div><?php echo isset($_COOKIE['auth_key']) ? '<span>Connected</span>': 'Disconnected'; ?></div>
     </div>
 
-    <h4>You're connected to: </h4>
-    <input type="text" value="https://api.retailexpress.com.au/">
+    <?php if(isset($_COOKIE['auth_key'])): ?>
 
-    <button id="sync"> Sync All Products Now <span class="dashicons dashicons-image-rotate"></span> </button>
+        
+        <h4>You're connected to: </h4>
+        <input type="text" value="<?php echo esc_attr(get_option( 'rex__api_url' )); ?>">
+        
+        <input type="hidden" name="page" value="1">
+        
+        <div class="_action">
+            <h4 class="total">There are <span class="total_records"></span> products that needs to be sync. </h4>
+            <br>
+            Number of Sync to process <span class="_current">1</span> / <span class="_total">1</span>
+            <button id="sync"> Sync Products Now <span class="dashicons dashicons-image-rotate"></span> </button>
+        </div>
+    
+    <?php endif; ?>
+
+
 </div>
 
 <div class="response">
