@@ -11,18 +11,14 @@ jQuery(window).on('load', function() {
 
         jQuery('.response').append( "<p class='ongoing'>Syncing</p>" );
 
-        var page = jQuery('input[name=page]').val();
-        
-        var _current = jQuery('._current');
         var _total   = jQuery('._total').text();
         
-        var check    = false;
-
         if (confirm('Are you sure you want to sync Retail Express to the database?')) {
             // Save it!
             jQuery('.response').show();
 
             jQuery(function($) {
+
                 $('._current').countTo({
                     from: 0,
                     to: _total,
@@ -34,24 +30,24 @@ jQuery(window).on('load', function() {
                             type : "post",
                             url : frontend_ajax_object.ajaxurl,
                             data : { action: "create_woo_products", page_number: value },
-                            beforeSend: function () { check = true; },
                             success : function(response) {            
-                                
                                 jQuery('.response').append( response );
+                              
+                                if(value == _total){
 
+                                    jQuery('.ongoing').remove();
+
+                                    jQuery("._action #sync").removeAttr('disabled').text('Click to sync again.'); // Disabled to prevent multiple clicks
+                                    jQuery('._action #sync').removeClass('spin');
+                                    jQuery('._action #sync > span').hide();
+                                    
+                                    jQuery('.response').scrollTop(jQuery('.response').scrollHeight);
+                                }
                             }
                         });
-
-
                     },
                     onComplete: function(value) {
-                        
-                        jQuery('.response').append( "<p class='ongoing'></p>" );
-                        
-                        jQuery("._action #sync").removeAttr('disabled').text('Click to sync again.'); // Disabled to prevent multiple clicks
-                        jQuery('._action #sync').removeClass('spin');
-                        jQuery('._action #sync > span').hide();
-
+                        jQuery('.response').append( "<p class='ongoing'>Products that were updated/added will be listed below</p>" );
                     }
                 });
             });

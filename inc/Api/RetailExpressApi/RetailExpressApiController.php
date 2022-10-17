@@ -299,14 +299,15 @@ class RetailExpressApiController
                 
                 wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
                 
-                echo "<p>" . $product['product_name'] . " product has been successfully added to the database. </p>";
+                echo "<p class='rex_product'>" . $product['product_name'] . " </p>";
 
             }else{
                 
                 $post_id = $check;
                 update_post_meta( $post_id, '_price', $product['price'] );
                 wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
-                echo "<p>" . $product['product_name'] . " product has been successfully updated from the database. </p>";
+                
+                echo "<p class='rex_product'>" . $product['product_name'] . " </p>";
 
 
             }
@@ -316,8 +317,6 @@ class RetailExpressApiController
     public function create_variable_products() {
 
         $products = $this->map_variable_products();
-        // echo "<pre>"; print_r($products); echo "</pre>";
-        // die;
         
         foreach ($products as $key => $product_data) {
             # code...
@@ -341,10 +340,18 @@ class RetailExpressApiController
                 wp_set_object_terms($post_id, $product_data['categories'], 'product_cat'); // Set up its categories
                 wp_set_object_terms($post_id, 'variable', 'product_type'); // Set it to a variable product type
             
-                $this->insert_product_attributes($post_id, array( "size", "colour" ), $product_data['variations']); // Add attributes passing the new post id, attributes & variations
+                $this->insert_product_attributes($post_id, array( "size" ), $product_data['variations']); // Add attributes passing the new post id, attributes & variations
                 $this->insert_product_variations($post_id, $product_data['variations']); // Insert variations passing the new post id & variations
                 
-                echo "<p>" . $product_data['name'] . " product variable has been successfully added to the database. </p>";
+                echo "<p class='rex_product'>" . $product_data['name'] . " </p>";
+            }else{
+
+                $post_id = $check;
+                
+                update_post_meta( $post_id, '_price', $product['price'] );
+                wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
+                
+                echo "<p class='rex_product'>" . $product['product_name'] . " </p>";
             }
         }
         
@@ -398,36 +405,48 @@ class RetailExpressApiController
     {
         foreach ($variations as $index => $variation)
         {
-            $variation_post = array( // Setup the post data for the variation
-    
-                'post_title'  => 'Variation #'.$index.' of '.count($variations).' for product#'. $post_id,
-                'post_name'   => 'product-'.$post_id.'-variation-'.$index,
-                'post_status' => 'publish',
-                'post_parent' => $post_id,
-                'post_type'   => 'product_variation',
-                'guid'        => home_url() . '/?product_variation=product-' . $post_id . '-variation-' . $index
-            );
-    
-            $variation_post_id = wp_insert_post($variation_post); // Insert the variation
+            $check = wc_get_product_id_by_sku($variation['sku']);
             
+            if( $check == 0 ) {
 
-            
-            
-            foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
-            {
+                $variation_post = array( // Setup the post data for the variation
+                    'post_title'  => 'Variation #'.$index.' of '.count($variations).' for product#'. $post_id,
+                    'post_name'   => 'product-'.$post_id.'-variation-'.$index,
+                    'post_status' => 'publish',
+                    'post_parent' => $post_id,
+                    'post_type'   => 'product_variation',
+                    'guid'        => home_url() . '/?product_variation=product-' . $post_id . '-variation-' . $index
+                );
+        
+                $variation_post_id = wp_insert_post($variation_post); // Insert the variation
+  
+                foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
+                {
+                    $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
+                    
+                    update_post_meta($variation_post_id, 'attribute_pa_'.$attribute, $attribute_term->slug);
+                }
+        
+                                
+                update_post_meta( $variation_post_id, '_manage_stock', 'yes' ); 
+                wc_update_product_stock($variation_post_id, $variation['stock'] < 0 ? 0:$variation['stock'], 'set');
+
+                update_post_meta($variation_post_id, '_sku', $variation['sku']); // Set its SKU
+
+                update_post_meta($variation_post_id, '_price', $variation['price']);
+                update_post_meta($variation_post_id, '_regular_price', $variation['price']);
+
+                echo "<p class='rex_product'>" . $variation['name'] . " </p>";
+
+            } else {
+                $post_id = $check;
                 
-                $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
+                update_post_meta( $variation_post_id, '_price', $variation['price'] );
+                wc_update_product_stock($variation_post_id, $variation['stock'] < 0 ? 0:$variation['stock'], 'set');
                 
-                update_post_meta($variation_post_id, 'attribute_pa_'.$attribute, $attribute_term->slug);
+                echo "<p class='rex_product'>" . $variation['product_name'] . " </p>";
             }
-    
-                            
-            update_post_meta( $variation_post_id, '_manage_stock', 'yes' ); 
-            wc_update_product_stock($variation_post_id, $variation['stock'] < 0 ? 0:$variation['stock'], 'set');
 
-
-            update_post_meta($variation_post_id, '_price', $variation['price']);
-            update_post_meta($variation_post_id, '_regular_price', $variation['price']);
         }
     }
 

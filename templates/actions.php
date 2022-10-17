@@ -1,4 +1,4 @@
-<h1>Update Data in WooCommerce</h1>
+<h1>Sync Data from Retail Express to WooCommerce</h1>
 <div class="w-container">
 
     <div class="w-box">
@@ -10,14 +10,13 @@
         
         <?php if(isset($_COOKIE['auth_key'])): ?>
             
-            
             <h4>You're connected to: </h4>
             <input type="text" value="<?php echo esc_attr(get_option( 'rex__api_url' )); ?>">
             
             <input type="hidden" name="page" value="1">
             
             <div class="_action">
-            <h4 class="total">There are <span class="total_records"></span> products that needs to be sync. </h4>
+            <h4 class="total">There are <span class="total_records"></span> products that needs to be sync. These includes Simple and Variable Products. </h4>
             <br>
             Number of Sync to process <span class="_current">1</span> / <span class="_total">1</span>
             <button id="sync"> Sync Products Now <span class="dashicons dashicons-image-rotate"></span> </button>
@@ -27,7 +26,7 @@
         
         
     </div>
-    
+
     <div class="response">
         
     </div>
