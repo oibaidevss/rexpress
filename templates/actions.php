@@ -16,9 +16,9 @@
             <input type="hidden" name="page" value="1">
             
             <div class="_action">
-            <h4 class="total">There are <span class="total_records"></span> products that needs to be sync. These includes Simple and Variable Products. </h4>
-            <br>
-            Number of Sync to process <span class="_current">1</span> / <span class="_total">1</span>
+            <!-- <h4 class="total">There are <span class="total_records"></span> products that needs to be sync. These includes Simple and Variable Products. </h4> -->
+            
+            Number of sync to process:  <span class="_current">1</span> out of <span class="_total">1</span>
             <button id="sync"> Sync Products Now <span class="dashicons dashicons-image-rotate"></span> </button>
         </div>
         

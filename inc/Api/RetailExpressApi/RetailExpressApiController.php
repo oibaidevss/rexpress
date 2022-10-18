@@ -29,10 +29,6 @@ class RetailExpressApiController
                 add_action( 'init', array($this, 'unset_cookies') );
             }
 
-            // add_action( 'init', array($this, 'create_woo_products') );
-
-            
-
         }else{
             
             $access_token = '';
@@ -55,11 +51,10 @@ class RetailExpressApiController
 
         $forwardSlash = substr($url, strlen($url)-1);
 
-        if($forwardSlash !== '/'){
-            $forwardSlash = '/';
-        }
+        $slash = $forwardSlash === "/" ? "":"/";
 
-        $url = $url . $forwardSlash . 'v2/auth/token';
+        $url = $url . $slash . 'v2/auth/token';
+
         $curl = curl_init($url);
 
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "GET");
@@ -97,11 +92,9 @@ class RetailExpressApiController
         
         $forwardSlash = substr($url, strlen($url)-1);
 
-        if($forwardSlash !== '/'){
-            $forwardSlash = '/';
-        }
+        $slash = $forwardSlash === "/" ? "":"/";
 
-        $url = $url . $forwardSlash . "v2/products?outlet_id=1&page_number=$page&include_inventory=true&page_size=$page_size&sales_channel_id=1";
+        $url = $url . $slash . "v2/products?outlet_id=1&page_number=$page&include_inventory=true&page_size=$page_size&sales_channel_id=1";
 
         $curl = curl_init($url);
 
@@ -136,15 +129,27 @@ class RetailExpressApiController
 
             if ( count($product->custom_properties)  == 0 ) {
 
-                $simple[$key]['product_name'] = $product->short_description; 
+                $d1 = !empty(get_option( 'rex_update_last_updated' )) ? strtotime(get_option( 'rex_update_last_updated' )) : strtotime(date('m/d/Y h:i:s a', time()));
+                $d2 = strtotime( $product->modified_on );
+
+                $diff = $d1 - $d2;
+                $time = ($diff/3600);
+
+
+                $simple[$key]['name'] = $product->short_description; 
                 
-                $simple[$key]['product_category'] = $product->product_type->name; 
+                $simple[$key]['category'] = $product->product_type->name; 
                 
                 $simple[$key]['stock'] = $product->inventory[0]->quantity_available;
                 
                 $simple[$key]['sku'] = $product->supplier_sku;
                 
                 $simple[$key]['price'] = $product->sell_price_inc;
+
+                $simple[$key]['modified_on'] = strtotime($product->modified_on);
+                
+                $simple[$key]['_should_update'] = $time;
+
 
             }
         
@@ -154,6 +159,7 @@ class RetailExpressApiController
     }
 
     public function map_variable_products(){
+
         $products = $this->get_products();
 
         $variations = []; 
@@ -172,10 +178,10 @@ class RetailExpressApiController
                     'sku'   => $variation->supplier_sku,
                     'price' => $variation->sell_price_inc,
                     'stock' => $variation->inventory[0]->quantity_available,
+                    'modified_on' => strtotime($variation->modified_on),
                     'parent' => $variation->custom_properties[0]->value,
                     'attributes'    => array(
                         'size' => $variation->short_description,
-                        $variation->attributes => $variation->attribute->name,
                     ),
                 );
             }
@@ -200,7 +206,7 @@ class RetailExpressApiController
                     $variables[$key]['name'] = $variable->short_description;
                     $variables[$key]['description'] = $variable->short_description;
                     $variables[$key]['sku'] = $variable->custom_properties[0]->value;
-                    $variables[$key]['categories'] = "";    
+                    $variables[$key]['categories'] = $variable->product_type->name;    
 
                     foreach ($variations as $variation_key => $variation) {
                         if( $variables[$key]['parent'] === $variation['parent'] ){
@@ -238,12 +244,19 @@ class RetailExpressApiController
     // For Ajax Request
     public function create_woo_products( ) {
         
+        update_option( 'rex_update_last_updated', date('m/d/Y h:i:s a', time()) );
+
         // Create Simple Products    
-        $this->create_simple_products();
+        $simple = $this->create_simple_products();
+        // print_r($simple);
 
         // Create Variable Parent Products
-        $this->create_variable_products();
+        $variable = $this->create_variable_products();
         
+        $data = array_merge($simple, $variable);
+
+        echo json_encode($data);
+
         wp_die();
     }
 
@@ -253,13 +266,15 @@ class RetailExpressApiController
         
         $products = $this->map_products();
 
+        $logs = [];
+
         foreach ($products as $key => $product) {
             $check = wc_get_product_id_by_sku($product['sku']);
             
             if( $check == 0 ) {
                     
                 $args = array( 
-                    'post_title' => $product['product_name'],
+                    'post_title' => $product['name'],
                     'post_status' => 'publish',
                     'post_type' => 'product'
                 );
@@ -279,7 +294,7 @@ class RetailExpressApiController
                 update_post_meta( $post_id, '_sale_price', '' );
                 
                 update_post_meta( $post_id, '_purchase_note', '' );
-                update_post_meta( $post_id, '_featured', 'no' );
+                update_post_meta( $post_id, '_featublue', 'no' );
                 
                 update_post_meta( $post_id, '_weight', '' );
                 update_post_meta( $post_id, '_length', '' );
@@ -295,11 +310,12 @@ class RetailExpressApiController
                 update_post_meta( $post_id, '_manage_stock', 'yes' ); 
                 update_post_meta( $post_id, '_backorders', 'no' );
     
-
-                
                 wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
                 
-                echo "<p class='rex_product'>" . $product['product_name'] . " </p>";
+                $logs[$key] = [
+                    'name' => $product['name'],
+                    'type' => 'created'
+                ];
 
             }else{
                 
@@ -307,17 +323,22 @@ class RetailExpressApiController
                 update_post_meta( $post_id, '_price', $product['price'] );
                 wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
                 
-                echo "<p class='rex_product'>" . $product['product_name'] . " </p>";
-
-
+                $logs[$key] = [
+                    'name' => $product['name'],
+                    'type' => 'updated'
+                ];
             }
         }
+
+        return $logs;
     }
 
     public function create_variable_products() {
 
         $products = $this->map_variable_products();
         
+        $logs = [];
+
         foreach ($products as $key => $product_data) {
             # code...
             $check = wc_get_product_id_by_sku($product_data['sku']);
@@ -337,24 +358,31 @@ class RetailExpressApiController
                 update_post_meta($post_id, '_sku', $product_data['sku']); // Set its SKU
                 update_post_meta( $post_id,'_visibility','visible'); // Set the product to visible, if not it won't show on the front end
 
-                wp_set_object_terms($post_id, $product_data['categories'], 'product_cat'); // Set up its categories
+                wp_set_object_terms( $post_id, $product_data['categories'], 'product_cat'); // Set up its categories
                 wp_set_object_terms($post_id, 'variable', 'product_type'); // Set it to a variable product type
             
                 $this->insert_product_attributes($post_id, array( "size" ), $product_data['variations']); // Add attributes passing the new post id, attributes & variations
                 $this->insert_product_variations($post_id, $product_data['variations']); // Insert variations passing the new post id & variations
                 
-                echo "<p class='rex_product'>" . $product_data['name'] . " </p>";
+                $logs[$key] = [
+                    'name' => $product_data['name'],
+                    'type' => 'created'
+                ];
+
             }else{
 
                 $post_id = $check;
                 
-                update_post_meta( $post_id, '_price', $product['price'] );
-                wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
+                $logs[$key] = [
+                    'name' => $product_data['name'],
+                    'type' => 'updated'
+                ];
+
                 
-                echo "<p class='rex_product'>" . $product['product_name'] . " </p>";
             }
         }
         
+        return $logs;
     
     }
 
@@ -403,6 +431,8 @@ class RetailExpressApiController
     
     function insert_product_variations ($post_id, $variations)
     {
+        $logs = [];
+
         foreach ($variations as $index => $variation)
         {
             $check = wc_get_product_id_by_sku($variation['sku']);
@@ -436,7 +466,10 @@ class RetailExpressApiController
                 update_post_meta($variation_post_id, '_price', $variation['price']);
                 update_post_meta($variation_post_id, '_regular_price', $variation['price']);
 
-                echo "<p class='rex_product'>" . $variation['name'] . " </p>";
+                $logs[$key] = [
+                    'name' => $variation['name'],
+                    'type' => 'created'
+                ];
 
             } else {
                 $post_id = $check;
@@ -444,10 +477,15 @@ class RetailExpressApiController
                 update_post_meta( $variation_post_id, '_price', $variation['price'] );
                 wc_update_product_stock($variation_post_id, $variation['stock'] < 0 ? 0:$variation['stock'], 'set');
                 
-                echo "<p class='rex_product'>" . $variation['product_name'] . " </p>";
-            }
+                $logs[$key] = [
+                    'name' => $variation['name'],
+                    'type' => 'updated'
+                ];
 
+            }
         }
+
+        return $logs;
     }
 
     // Handle Cookies

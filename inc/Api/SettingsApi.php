@@ -25,18 +25,19 @@ class SettingsApi
     public function rexpressOptions() {
         // Update Source of truth on successful order. oso
         register_setting( 'rex-options-group', 'rex_update_oso' );
+        register_setting( 'rex-options-group', 'rex_update_last_updated' );
 
         add_settings_section( 
             'rex-action-options', 
-            'Plugin Options.', 
+            'Options', 
             array( $this, 'rex_options_sub_title' ), 
             'rexpress_settings'
         );
 
         add_settings_field( 
-            'rex-update-oso', 
-            'Update Retail Express listing on succesful order.', 
-            array( $this, '_rex_update_oso' ), 
+            'rex-update-last-updated', 
+            'Last Updated', 
+            array( $this, '_rex_update_last_updated' ), 
             'rexpress_settings',
             'rex-action-options'
         );
@@ -44,12 +45,17 @@ class SettingsApi
     }
 
     public function rex_options_sub_title() {
-        echo '<p>Please update options below.</p>';
+        echo '<p>You will be able to control the plugin capabities with the below options. </p>';
     }
 
-    public function _rex_update_oso() {
-        $apiUrl = esc_attr(get_option( 'rex_update_oso' )); 
-        echo '<input type="checkbox" name="rex_update_oso" />';
+
+    public function _rex_update_last_updated() {
+        $data = esc_attr(get_option( 'rex_update_last_updated' )); 
+        
+        $el = "<input id='rex_update_last_updated' type='text' disabled='true' value='$data' name='rex_update_last_updated' />";
+        $el .= '<label for="rex_update_last_updated"> When was the <strong>"Sync Produc"</strong> last run.</label>';
+
+        echo $el;
     }
 
     public function rexpressAPISettings() {

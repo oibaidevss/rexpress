@@ -5,20 +5,21 @@ jQuery(window).on('load', function() {
     
     jQuery('._action #sync').on('click', function(){
         
-        jQuery(this).attr('disabled', 'disabled'); // Disabled to prevent multiple clicks
-        jQuery('#sync > span').show();
-        jQuery('#sync').addClass('spin');
-
-        jQuery('.response').append( "<p class='ongoing'>Syncing</p>" );
-
-        var _total   = jQuery('._total').text();
-        
         if (confirm('Are you sure you want to sync Retail Express to the database?')) {
+            jQuery(this).attr('disabled', 'disabled'); // Disabled to prevent multiple clicks
+            jQuery('#sync > span').show();
+            jQuery('#sync').addClass('spin');
+    
+            jQuery('.response').empty();
+            jQuery('.response').append( "<p class='ongoing'>Syncing</p>" );
+    
+            var _total   = jQuery('._total').text();
+            
             // Save it!
             jQuery('.response').show();
 
             jQuery(function($) {
-
+                var _obj = []
                 $('._current').countTo({
                     from: 0,
                     to: _total,
@@ -27,11 +28,15 @@ jQuery(window).on('load', function() {
                     onUpdate: function(value) {
 
                         jQuery.ajax({
-                            type : "post",
+                            type : "GET",
+                            contentType: "application/json",
+                            dataType: "json",
                             url : frontend_ajax_object.ajaxurl,
                             data : { action: "create_woo_products", page_number: value },
                             success : function(response) {            
-                                jQuery('.response').append( response );
+
+                                // console.log(response);
+                                _obj.push(response);
                               
                                 if(value == _total){
 
@@ -41,7 +46,17 @@ jQuery(window).on('load', function() {
                                     jQuery('._action #sync').removeClass('spin');
                                     jQuery('._action #sync > span').hide();
                                     
-                                    jQuery('.response').scrollTop(jQuery('.response').scrollHeight);
+                                    
+                                    jQuery.each(_obj, function(i, v) {
+                                        jQuery.each(v, function(index, value) {
+                                            jQuery('.response').append( "<p>" + value.name + " has been successfully <span class='"+ value.type +"' style='font-weight: 900;'>" + value.type + "</span>.</p>");
+                                            jQuery('.response').animate({scrollTop: $(".response")[0].scrollHeight }, 100)
+                                        });
+                                    });
+
+
+                                    
+
                                 }
                             }
                         });

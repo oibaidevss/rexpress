@@ -101,10 +101,12 @@ input[name="rex__api_url"] { width: 250px; }
     margin: 2px;
     font-family: monospace;
 }
+.response p span.created{ color: rgb(0, 255, 17); }
+.response p span.updated{ color: rgb(30, 171, 247); }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .response::-webkit-scrollbar {
-    /* display: none; */
+    display: none;
 }
   
   /* Hide scrollbar for IE, Edge and Firefox */
