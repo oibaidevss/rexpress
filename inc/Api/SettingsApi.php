@@ -15,19 +15,50 @@ class SettingsApi
             add_action( 'admin_menu', array ( $this, 'addAdminMenu' ) );
         
             // Activate Custom Settings
-            add_action( 'admin_init', array( $this, 'rexpressCustomSettings' ));
+            add_action( 'admin_init', array( $this, 'rexpressAPISettings' ));
+            add_action( 'admin_init', array( $this, 'rexpressOptions' ));
         }
 
     }
 
     // ---------------------------------------------
-    public function rexpressCustomSettings() {
+    public function rexpressOptions() {
+        // Update Source of truth on successful order. oso
+        register_setting( 'rex-options-group', 'rex_update_oso' );
+
+        add_settings_section( 
+            'rex-action-options', 
+            'Plugin Options.', 
+            array( $this, 'rex_options_sub_title' ), 
+            'rexpress_settings'
+        );
+
+        add_settings_field( 
+            'rex-update-oso', 
+            'Update Retail Express listing on succesful order.', 
+            array( $this, '_rex_update_oso' ), 
+            'rexpress_settings',
+            'rex-action-options'
+        );
+
+    }
+
+    public function rex_options_sub_title() {
+        echo '<p>Please update options below.</p>';
+    }
+
+    public function _rex_update_oso() {
+        $apiUrl = esc_attr(get_option( 'rex_update_oso' )); 
+        echo '<input type="checkbox" name="rex_update_oso" />';
+    }
+
+    public function rexpressAPISettings() {
 
         register_setting('rex-settings-group', 'rex__api_url' );
 
         register_setting('rex-settings-group', 'rex__api_api' );
 
-        add_settings_section( 'rex-settings-options', '', array( $this, 'rex_options' ), 'rexpress_settings' );
+        add_settings_section( 'rex-settings-options', 'Api Connection', array( $this, 'rex_options' ), 'rexpress_settings' );
 
         add_settings_field( 'rex-api-url', 'API URL', array( $this, 'rex__subscriber_api_url' ), 'rexpress_settings','rex-settings-options' );
 
