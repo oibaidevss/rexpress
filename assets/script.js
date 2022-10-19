@@ -39,6 +39,16 @@ jQuery(window).on('load', function() {
                                 _obj.push(response);
                               
                                 if(value == _total){
+                                    
+                                    jQuery.each(_obj, function(i, v) {
+                                        jQuery.each(v, function(index, value) {
+                                            jQuery('.response').append( "<p>" + value.name + " has been successfully <span class='"+ value.type +"' style='font-weight: 900;'>" + value.type + "</span>.</p>");
+                                            jQuery('.response').animate({scrollTop: $(".response")[0].scrollHeight }, 100)
+                                            
+
+                                        
+                                        });
+                                    });
 
                                     jQuery('.ongoing').remove();
 
@@ -46,17 +56,6 @@ jQuery(window).on('load', function() {
                                     jQuery('._action #sync').removeClass('spin');
                                     jQuery('._action #sync > span').hide();
                                     
-                                    
-                                    jQuery.each(_obj, function(i, v) {
-                                        jQuery.each(v, function(index, value) {
-                                            jQuery('.response').append( "<p>" + value.name + " has been successfully <span class='"+ value.type +"' style='font-weight: 900;'>" + value.type + "</span>.</p>");
-                                            jQuery('.response').animate({scrollTop: $(".response")[0].scrollHeight }, 100)
-                                        });
-                                    });
-
-
-                                    
-
                                 }
                             }
                         });

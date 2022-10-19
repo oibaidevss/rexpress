@@ -373,6 +373,9 @@ class RetailExpressApiController
 
                 $post_id = $check;
                 
+                $this->insert_product_attributes($post_id, array( "size" ), $product_data['variations']); // Add attributes passing the new post id, attributes & variations
+                $this->insert_product_variations($post_id, $product_data['variations']); // Insert variations passing the new post id & variations
+
                 $logs[$key] = [
                     'name' => $product_data['name'],
                     'type' => 'updated'
