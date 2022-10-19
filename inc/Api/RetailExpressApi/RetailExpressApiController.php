@@ -284,14 +284,14 @@ class RetailExpressApiController
                 wp_set_object_terms( $post_id, 'simple', 'product_type' );
                 wp_set_object_terms( $post_id, $product_data['categories'], 'product_cat'); // Set up its categories
                 
-                update_post_meta( $post_id, '_regular_price', '' );
+                update_post_meta( $post_id, '_regular_price', $product['price'] );
+                update_post_meta( $post_id, '_sale_price', '' );
                 
                 update_post_meta( $post_id, '_visibility', 'visible' );
                 update_post_meta( $post_id, '_stock_status', 'instock');
                 update_post_meta( $post_id, 'total_sales', '0' );
                 update_post_meta( $post_id, '_downloadable', 'no' );
                 update_post_meta( $post_id, '_virtual', 'yes' );
-                update_post_meta( $post_id, '_sale_price', '' );
                 
                 update_post_meta( $post_id, '_purchase_note', '' );
                 update_post_meta( $post_id, '_featublue', 'no' );
@@ -321,6 +321,8 @@ class RetailExpressApiController
                 
                 $post_id = $check;
                 update_post_meta( $post_id, '_price', $product['price'] );
+                update_post_meta( $post_id, '_regular_price', $product['price'] );
+                update_post_meta( $post_id, '_sale_price', '' );
                 wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
                 
                 $logs[$key] = [
@@ -477,9 +479,13 @@ class RetailExpressApiController
             } else {
                 $post_id = $check;
                 
+                update_post_meta($variation_post_id, '_price', $variation['price']);
+                update_post_meta($variation_post_id, '_regular_price', $variation['price']);
+                
                 update_post_meta( $variation_post_id, '_price', $variation['price'] );
                 wc_update_product_stock($variation_post_id, $variation['stock'] < 0 ? 0:$variation['stock'], 'set');
                 
+
                 $logs[$key] = [
                     'name' => $variation['name'],
                     'type' => 'updated'
