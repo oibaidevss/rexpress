@@ -471,22 +471,30 @@ class RetailExpressApiController
                 update_post_meta($variation_post_id, '_price', $variation['price']);
                 update_post_meta($variation_post_id, '_regular_price', $variation['price']);
 
-                $logs[$key] = [
+                $logs[$index] = [
                     'name' => $variation['name'],
                     'type' => 'created'
                 ];
 
             } else {
                 $post_id = $check;
+
+                foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
+                {
+                    
+                    $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
+                    
+                    update_post_meta($post_id, 'attribute_pa_'.$attribute, $attribute_term->slug);
                 
-                update_post_meta($variation_post_id, '_price', $variation['price']);
-                update_post_meta($variation_post_id, '_regular_price', $variation['price']);
-                
-                update_post_meta( $variation_post_id, '_price', $variation['price'] );
-                wc_update_product_stock($variation_post_id, $variation['stock'] < 0 ? 0:$variation['stock'], 'set');
+                }
+
+                update_post_meta($post_id, '_regular_price', $variation['price']);
+
+                update_post_meta( $post_id, '_price', $variation['price'] );
+                wc_update_product_stock($post_id, $variation['stock'], 'set');
                 
 
-                $logs[$key] = [
+                $logs[$index] = [
                     'name' => $variation['name'],
                     'type' => 'updated'
                 ];
