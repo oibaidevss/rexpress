@@ -52,15 +52,18 @@ jQuery(window).on('load', function() {
                                     btn.find('span').hide();
 
                                     console.log(response);
-                                    
+                                    var counter = 0
+
                                     jQuery.each(response, function(i, v){
                                         
                                         jQuery.each(v, function ( k, value ){
                                             res.append("<p class='value'> " + value.sku + " " + value.name + " has been <span class='"+ value.type +"'>" +  value.type  + "</span></p>");     
-                                            count++
+                                            counter++
                                         })
                                         
                                     })
+
+                                    res.append("<p class='value'> There are "+ counter +" products that have been updated/created.</p>");    
                                     
                                     swal({
                                         title: "Awesome",
