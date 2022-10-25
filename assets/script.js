@@ -19,7 +19,7 @@ jQuery(window).on('load', function() {
             jQuery('.response').show();
 
             jQuery(function($) {
-                var _obj = []
+
                 $('._current').countTo({
                     from: 0,
                     to: _total,
@@ -36,19 +36,17 @@ jQuery(window).on('load', function() {
                             success : function(response) {            
 
                                 // console.log(response);
-                                _obj.push(response);
                               
                                 if(value == _total){
                                     
-                                    jQuery.each(_obj, function(i, v) {
-                                        jQuery.each(v, function(index, value) {
-                                            jQuery('.response').append( "<p>" + value.name + " has been successfully <span class='"+ value.type +"' style='font-weight: 900;'>" + value.type + "</span>.</p>");
-                                            jQuery('.response').animate({scrollTop: $(".response")[0].scrollHeight }, 100)
-                                            
 
-                                        
-                                        });
-                                    });
+                                    console.log(response);
+
+                                    jQuery.each(response, function(index, value){
+                                         if(index === 'simple'){
+                                            
+                                         }   
+                                    })
 
                                     jQuery('.ongoing').remove();
 
@@ -61,7 +59,7 @@ jQuery(window).on('load', function() {
                         });
                     },
                     onComplete: function(value) {
-                        jQuery('.response').append( "<p class='ongoing'>Products that were updated/added will be listed below</p>" );
+                        jQuery('.response').append( "<p class='ongoing'>Products that were updated/created will be listed below</p>" );
                     }
                 });
             });

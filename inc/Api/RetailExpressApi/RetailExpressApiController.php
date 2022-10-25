@@ -6,14 +6,25 @@
 namespace Inc\Api\RetailExpressApi;
 
 use \Inc\Base\BaseController;
+use \Inc\Api\RetailExpressApi\RetailExpressLogs;
+
+use Carbon\Carbon;
 
 class RetailExpressApiController 
 {
 
-    public $url;
-    public $apiKey;
-    
+    private $url;
+    private $apiKey;
+    private $time;
+    private $logs = [];
+    private $checker = [];
+
     function register(){
+        
+        $this->RetailExpressLogs = new RetailExpressLogs();
+        $this->time = Carbon::now()->toDateTimeString();
+        
+
         $this->url    = esc_attr(get_option( 'rex__api_url' ));
         $this->apiKey = esc_attr(get_option( 'rex__api_api' ));
         
@@ -29,6 +40,7 @@ class RetailExpressApiController
                 add_action( 'init', array($this, 'unset_cookies') );
             }
 
+            // add_action('init', array($this, 'create_woo_products'));
         }else{
             
             $access_token = '';
@@ -248,16 +260,13 @@ class RetailExpressApiController
 
         // Create Simple Products    
         $simple = $this->create_simple_products();
-        // print_r($simple);
 
         // Create Variable Parent Products
         $variable = $this->create_variable_products();
         
-        $data = array_merge($simple, $variable);
+        echo json_encode($this->logs);
 
-        echo json_encode($data);
-
-        wp_die();
+        die;
     }
 
 
@@ -265,12 +274,12 @@ class RetailExpressApiController
     public function create_simple_products() {
         
         $products = $this->map_products();
-
-        $logs = [];
+       
+        $simple = [];
 
         foreach ($products as $key => $product) {
             $check = wc_get_product_id_by_sku($product['sku']);
-            
+
             if( $check == 0 ) {
                     
                 $args = array( 
@@ -312,7 +321,7 @@ class RetailExpressApiController
     
                 wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
                 
-                $logs[$key] = [
+                $simple[$key] = [
                     'name' => $product['name'],
                     'type' => 'created'
                 ];
@@ -320,26 +329,36 @@ class RetailExpressApiController
             }else{
                 
                 $post_id = $check;
-                update_post_meta( $post_id, '_price', $product['price'] );
-                update_post_meta( $post_id, '_regular_price', $product['price'] );
-                update_post_meta( $post_id, '_sale_price', '' );
-                wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
+                $post = wc_get_product( $post_id );
+
+                if( $post->get_stock_quantity() != $product['stock'] || $post->get_price() != $product['price'] ) 
+                {
                 
-                $logs[$key] = [
-                    'name' => $product['name'],
-                    'type' => 'updated'
-                ];
+                    update_post_meta( $post_id, '_price', $product['price'] );
+                    update_post_meta( $post_id, '_regular_price', $product['price'] );
+                    update_post_meta( $post_id, '_sale_price', '' );
+                    update_post_meta( $post_id, '_updated_at', $this->time );
+
+                    wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
+                    
+                    $simple[$key] = [
+                        'name' => $product['name'],
+                        'type' => 'updated'
+                    ];
+                }
+                
+
             }
         }
 
-        return $logs;
+        $this->logs['simple'] = $simple;
     }
 
     public function create_variable_products() {
 
         $products = $this->map_variable_products();
         
-        $logs = [];
+        $variable = [];
 
         foreach ($products as $key => $product_data) {
             # code...
@@ -357,7 +376,10 @@ class RetailExpressApiController
                  
                 $post_id = wp_insert_post($post); // Insert the post returning the new post id
                 
+                add_post_meta( $post_id, '_updated_at', $this->time, true );
+
                 update_post_meta($post_id, '_sku', $product_data['sku']); // Set its SKU
+
                 update_post_meta( $post_id,'_visibility','visible'); // Set the product to visible, if not it won't show on the front end
 
                 wp_set_object_terms( $post_id, $product_data['categories'], 'product_cat'); // Set up its categories
@@ -366,9 +388,9 @@ class RetailExpressApiController
                 $this->insert_product_attributes($post_id, array( "size" ), $product_data['variations']); // Add attributes passing the new post id, attributes & variations
                 $this->insert_product_variations($post_id, $product_data['variations']); // Insert variations passing the new post id & variations
                 
-                $logs[$key] = [
+                $variable[$key] = [
                     'name' => $product_data['name'],
-                    'type' => 'created'
+                    'type' => 'created',
                 ];
 
             }else{
@@ -376,18 +398,21 @@ class RetailExpressApiController
                 $post_id = $check;
                 
                 $this->insert_product_attributes($post_id, array( "size" ), $product_data['variations']); // Add attributes passing the new post id, attributes & variations
-                $this->insert_product_variations($post_id, $product_data['variations']); // Insert variations passing the new post id & variations
+                $variants = $this->insert_product_variations($post_id, $product_data['variations']); // Insert variations passing the new post id & variations
+                if( !empty($variants) ) {
 
-                $logs[$key] = [
-                    'name' => $product_data['name'],
-                    'type' => 'updated'
-                ];
+                    update_post_meta( $post_id, '_updated_at', $this->time );
+    
+                    $variable[$key] = [
+                        'name' => $product_data['name'],
+                        'type' => 'updated',
+                    ];  
 
-                
+                }
             }
         }
         
-        return $logs;
+        $this->logs['variable'] = $variable;
     
     }
 
@@ -436,12 +461,16 @@ class RetailExpressApiController
     
     function insert_product_variations ($post_id, $variations)
     {
-        $logs = [];
+        $variants = [];
 
         foreach ($variations as $index => $variation)
         {
             $check = wc_get_product_id_by_sku($variation['sku']);
-            
+            $product = wc_get_product( $post_id );
+
+            $this->checker[] = $product->name;    
+
+
             if( $check == 0 ) {
 
                 $variation_post = array( // Setup the post data for the variation
@@ -454,12 +483,13 @@ class RetailExpressApiController
                 );
         
                 $variation_post_id = wp_insert_post($variation_post); // Insert the variation
-  
+
                 foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
                 {
                     $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
                     
                     update_post_meta($variation_post_id, 'attribute_pa_'.$attribute, $attribute_term->slug);
+                    
                 }
         
                                 
@@ -471,38 +501,46 @@ class RetailExpressApiController
                 update_post_meta($variation_post_id, '_price', $variation['price']);
                 update_post_meta($variation_post_id, '_regular_price', $variation['price']);
 
-                $logs[$index] = [
+                add_post_meta( $post_id, '_updated_at', $this->time, true );
+
+                $variants[$index] = [
                     'name' => $variation['name'],
-                    'type' => 'created'
+                    'type' => 'created',
                 ];
 
             } else {
+
                 $post_id = $check;
+
+                $product = wc_get_product( $post_id );
 
                 foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
                 {
-                    
                     $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
-                    
                     update_post_meta($post_id, 'attribute_pa_'.$attribute, $attribute_term->slug);
-                
                 }
 
-                update_post_meta($post_id, '_regular_price', $variation['price']);
+                if( $product->get_stock_quantity() != $variation['stock'] || $product->get_price() != $variation['price'] ) {
 
-                update_post_meta( $post_id, '_price', $variation['price'] );
-                wc_update_product_stock($post_id, $variation['stock'], 'set');
+                    
+                    wc_update_product_stock($post_id, $variation['stock'], 'set');
+                    
+                    update_post_meta($post_id, '_regular_price', $variation['price']);
+                    
+                    update_post_meta( $post_id, '_price', $variation['price'] );
+                    
+                    update_post_meta( $post_id, '_updated_at', $this->time );
+                    
+                    $variants[$index] = [
+                        'name' => $variation['name'],
+                        'type' => 'updated',
+                    ];
+                }
                 
-
-                $logs[$index] = [
-                    'name' => $variation['name'],
-                    'type' => 'updated'
-                ];
-
             }
         }
-
-        return $logs;
+        
+        $this->logs['variations'] = $variants;
     }
 
     // Handle Cookies

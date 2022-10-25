@@ -17,7 +17,8 @@ final class init
             Pages\Admin::class,
             Base\Enqueue::class,
             Base\SettingsLinks::class,
-            Api\RetailExpressApi\RetailExpressApiController::class
+            Api\RetailExpressApi\RetailExpressApiController::class,
+            Api\WooCommerce\AdminProductsTable::class
         ];
     }
 
