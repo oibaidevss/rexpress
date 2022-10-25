@@ -30,7 +30,7 @@ private static $installed = array (
     'aliases' => 
     array (
     ),
-    'reference' => '714e49b53471f3516630193e1133747cc484bf8e',
+    'reference' => '6bbf69a1342128382a17250d604ace97940ccd41',
     'name' => 'laptop-097/re-xpress',
   ),
   'versions' => 
@@ -42,7 +42,7 @@ private static $installed = array (
       'aliases' => 
       array (
       ),
-      'reference' => '714e49b53471f3516630193e1133747cc484bf8e',
+      'reference' => '6bbf69a1342128382a17250d604ace97940ccd41',
     ),
     'nesbot/carbon' => 
     array (
@@ -65,21 +65,22 @@ private static $installed = array (
     ),
     'symfony/translation' => 
     array (
-      'pretty_version' => '6.0.x-dev',
-      'version' => '6.0.9999999.9999999-dev',
+      'pretty_version' => '6.2.x-dev',
+      'version' => '6.2.9999999.9999999-dev',
       'aliases' => 
       array (
       ),
-      'reference' => '6f99eb179aee4652c0a7cd7c11f2a870d904330c',
+      'reference' => '2a32ad93ad16ffcd673f67fdd26ad04876d40222',
     ),
     'symfony/translation-contracts' => 
     array (
-      'pretty_version' => '3.0.x-dev',
-      'version' => '3.0.9999999.9999999-dev',
+      'pretty_version' => 'dev-main',
+      'version' => 'dev-main',
       'aliases' => 
       array (
+        0 => '3.2.x-dev',
       ),
-      'reference' => 'acbfbb274e730e5a0236f619b6168d9dedb3e282',
+      'reference' => '3345949cca10d564606f0b11e4a53f8030c3701f',
     ),
     'symfony/translation-implementation' => 
     array (
