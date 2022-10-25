@@ -8,16 +8,30 @@ namespace Inc\Api\RetailExpressApi;
 class RetailExpressLogs
 {
     
+
+    // public $logs = [];
     
     public function register() 
     {
-        
+        // print_r($this->logs);
     }
 
+    function create_log_file($logs){
 
-    public function export_logs()
-    {
-        echo "Export Logs";   
+
+        $file = fopen( $this->plugin_path ."logs/". time(). '_logs.csv', 'a');
+
+        foreach($logs as $key => $type){
+
+            foreach($type as $log){
+                echo fwrite($file, "Hello World. Testing!" . "\n");
+            }
+        }
+
+
+        fclose($file);
+
+
     }
     
 }

@@ -1,97 +1,110 @@
 jQuery(window).on('load', function() {
 
-    jQuery('#sync > span').hide();
-    jQuery('.response').hide();
-    
-    jQuery('._action #sync').on('click', function(){
+    var btn     = jQuery('#sync'); 
+    var res     = jQuery('.response');
+    var current     = jQuery('._current');
+
+    var total   = 0;
+    var count   = 0;
+
+    btn.find('span').hide();
+
+    btn.on('click', function(){
         
-        if (confirm('Are you sure you want to sync Retail Express to the database?')) {
-            jQuery(this).attr('disabled', 'disabled'); // Disabled to prevent multiple clicks
-            jQuery('#sync > span').show();
-            jQuery('#sync').addClass('spin');
-    
-            jQuery('.response').empty();
-            jQuery('.response').append( "<p class='ongoing'>Syncing</p>" );
-    
-            var _total   = jQuery('._total').text();
+        
+        swal({
+            title: "Are you sure?",
+            text: "You will not be able to undo this action.",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+          })
+          .then((action) => {
+            if (action) {
+                jQuery(this).attr('disabled', 'disabled'); // Disabled to prevent multiple clicks
             
-            // Save it!
-            jQuery('.response').show();
+                btn.find('span').show();
+                btn.addClass('spin');
+                res.empty();
+            
+                total = jQuery('._total').text();
 
-            jQuery(function($) {
-
-                $('._current').countTo({
-                    from: 0,
-                    to: _total,
-                    speed: 10000,
-                    refreshInterval: 2500,
-                    onUpdate: function(value) {
+                jQuery(function($) {
+                    for (let index = 1; index <= total; index++) {
 
                         jQuery.ajax({
                             type : "GET",
                             contentType: "application/json",
                             dataType: "json",
                             url : frontend_ajax_object.ajaxurl,
-                            data : { action: "create_woo_products", page_number: value },
-                            success : function(response) {            
+                            data : { action: "create_woo_products", page_number: index },
+                            success : function(response) {   
+                                
+                                count += 1;
+                                
+                                current.text(count);
 
-                                // console.log(response);
-                              
-                                if(value == _total){
+                                if(count == total){
+                                    btn.removeAttr('disabled')
+                                        .text('Click to sync again.')
+                                        .removeClass('spin');
                                     
+                                    btn.find('span').hide();
 
                                     console.log(response);
-
-                                    jQuery.each(response, function(index, value){
-                                         if(index === 'simple'){
-                                            
-                                         }   
-                                    })
-
-                                    jQuery('.ongoing').remove();
-
-                                    jQuery("._action #sync").removeAttr('disabled').text('Click to sync again.'); // Disabled to prevent multiple clicks
-                                    jQuery('._action #sync').removeClass('spin');
-                                    jQuery('._action #sync > span').hide();
                                     
+                                    jQuery.each(response, function(i, v){
+                                        
+                                        jQuery.each(v, function ( k, value ){
+                                            res.append("<p class='value'> " + value.sku + " " + value.name + " has been <span class='"+ value.type +"'>" +  value.type  + "</span></p>");     
+                                            count++
+                                        })
+                                        
+                                    })
+                                    
+                                    swal({
+                                        title: "Awesome",
+                                        text: "You've succesfully updated the products.",
+                                        icon: "success",
+                                        button: "Aww yiss!",
+                                    });
+
+
                                 }
                             }
                         });
-                    },
-                    onComplete: function(value) {
-                        jQuery('.response').append( "<p class='ongoing'>Products that were updated/created will be listed below</p>" );
                     }
                 });
-            });
+            } else {
+                console.log('canceled');
+            }
+          });
+        
 
-
-
-        } else {
-            // Do nothing!
-            console.log('canceled');
-        }
 
     });
    
     
     if(jQuery('body').hasClass('rexpress_page_rexpress_actions')){
-        console.log('options page');
 
-        
-        jQuery('._action').hide();
+        var records = jQuery('.total_records');
+        var action  = jQuery('._action');
+        var total   = jQuery('._total');
+
+        action.hide();
 
         jQuery.ajax({
-            type : "post",
+            type : "GET",
+            contentType: "application/json",
+            dataType: "json",
             url : frontend_ajax_object.ajaxurl,
             data : { action: "get_total_records" },
-            success : function(response) {
-                jQuery('._action').show();
-                jQuery('.total_records').text(response);
-                jQuery('._total').text( Math.ceil(parseInt(response) / 250) );
+            success : function(res) {
+                action.show();
+                records.text(res.total_records);
+                total.text( Math.ceil(parseInt(res.total_records) / res.page_size) );
             }
         })
-
-
     }
 });
 

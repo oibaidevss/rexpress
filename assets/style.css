@@ -88,21 +88,22 @@ input[name="rex__api_url"] { width: 250px; }
 
 .response { 
     padding: 4px 10px;
-    background-color: #333;
+    background-color: #b0b0b0;
     overflow-y: scroll;
     box-shadow: inset 0 0 10px #000;
     flex: 45%;
     width: 45%;
     max-height: 250px;
 }
-
-.response p{
-    color: #fff; 
+.response .heading { font-weight: 900; font-size: 16px; text-transform: capitalize; color: #333; }
+.response .value{
+    color: #333; 
     margin: 2px;
     font-family: monospace;
 }
-.response p span.created{ color: rgb(0, 255, 17); }
-.response p span.updated{ color: rgb(30, 171, 247); }
+.response .value span { font-weight: 900; }
+.response .value span.created{ color: rgb(0, 255, 17); }
+.response .value span.updated{ color: rgb(30, 171, 247); }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 .response::-webkit-scrollbar {
