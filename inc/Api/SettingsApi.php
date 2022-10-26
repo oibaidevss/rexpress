@@ -53,7 +53,7 @@ class SettingsApi
         $data = esc_attr(get_option( 'rex_update_last_updated' )); 
         
         $el = "<input id='rex_update_last_updated' type='text' disabled='true' value='$data' name='rex_update_last_updated' />";
-        $el .= '<label for="rex_update_last_updated"> When was the <strong>"Sync Produc"</strong> last run.</label>';
+        $el .= '<label for="rex_update_last_updated"> When was the <strong>"Sync Product"</strong> last run.</label>';
 
         echo $el;
     }

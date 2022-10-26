@@ -268,27 +268,6 @@ class RetailExpressApiController extends BaseController
         die;
     }
 
-
-    function create_log_file($logs){
-
-
-        $file = fopen( $this->plugin_path ."logs/". time(). '_logs.csv', 'a');
-
-        foreach($logs as $key => $type){
-
-            foreach($type as $log){
-                echo fwrite($file, "Hello World. Testing!" . "\n");
-            }
-        }
-
-
-        fclose($file);
-
-
-    }
-
-
-
     // Simple Products 
     public function create_simple_products() {
         
@@ -313,28 +292,14 @@ class RetailExpressApiController extends BaseController
                 wp_set_object_terms( $post_id, $product_data['categories'], 'product_cat'); // Set up its categories
                 
                 update_post_meta( $post_id, '_regular_price', $product['price'] );
-                update_post_meta( $post_id, '_sale_price', '' );
-                
                 update_post_meta( $post_id, '_visibility', 'visible' );
                 update_post_meta( $post_id, '_stock_status', 'instock');
                 update_post_meta( $post_id, 'total_sales', '0' );
                 update_post_meta( $post_id, '_downloadable', 'no' );
                 update_post_meta( $post_id, '_virtual', 'yes' );
-                
-                update_post_meta( $post_id, '_purchase_note', '' );
                 update_post_meta( $post_id, '_featublue', 'no' );
-                
-                update_post_meta( $post_id, '_weight', '' );
-                update_post_meta( $post_id, '_length', '' );
-                update_post_meta( $post_id, '_width', '' );
-                update_post_meta( $post_id, '_height', '' );
                 update_post_meta( $post_id, '_sku', $product['sku'] );
-                
-                update_post_meta( $post_id, '_product_attributes', array() );
-                update_post_meta( $post_id, '_sale_price_dates_from', '' );
-                update_post_meta( $post_id, '_sale_price_dates_to', '' );
                 update_post_meta( $post_id, '_price', $product['price'] );
-                update_post_meta( $post_id, '_sold_individually', '' );
                 update_post_meta( $post_id, '_manage_stock', 'yes' ); 
                 update_post_meta( $post_id, '_backorders', 'no' );
     
@@ -376,6 +341,7 @@ class RetailExpressApiController extends BaseController
 
         $this->logs['simple'] = $simple;
     }
+    
     // Variable Products
     public function create_variable_products() {
 
