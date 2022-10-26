@@ -22,12 +22,16 @@ class RetailExpressApiController extends BaseController
 
     function register(){
         
-        $this->RetailExpressLogs = new RetailExpressLogs();
         $this->time = Carbon::now()->toDateTimeString();
-        
 
         $this->url    = esc_attr(get_option( 'rex__api_url' ));
         $this->apiKey = esc_attr(get_option( 'rex__api_api' ));
+
+        if ( isset( $_GET['settings-updated'] ) && $_GET['page'] == 'rexpress_settings') {
+                
+            add_action( 'init', array($this, 'unset_cookies') ); // Unset Cookies
+        
+        }
         
         if(isset($_COOKIE['auth_key'])) {
             
@@ -40,26 +44,27 @@ class RetailExpressApiController extends BaseController
             if($this->url == null || $this->apiKey == null){
                 add_action( 'init', array($this, 'unset_cookies') );
             }
-            // echo "<pre>";
-            // print_r(json_encode($this->get_all_products( 'variable' )));
-            // echo "</pre>";
-            // die;
         }else{
-            
-            $access_token = '';
 
-            if($this->url != null && $this->apiKey != null){
-                $access_token = $this->auth_token($this->url, $this->apiKey)->access_token;
-            }else{
-                add_action( 'init', array($this, 'unset_cookies') );
+
+            $get_access_token = $this->auth_token($this->url, $this->apiKey);
+    
+            if($this->auth_token($this->url, $this->apiKey) != NULL){        
+                $this->set_cookies($get_access_token->access_token, $get_access_token->expires_on);            
             }
-
-            if($access_token != ''){
-                $cookies = $this->set_cookies($access_token);
+            
+            if($this->auth_token($this->url, $this->apiKey) == NULL && $_GET['page'] == 'rexpress_settings'){
+                add_action('admin_notices', function(){
+                    echo '<div class="notice notice-error is-dismissible">';
+                        echo "<p>Error! you've entered an invalid URL or API key!</p>";
+                    echo '</div>';
+                });
             }
 
         }
     }
+
+   
 
     // API Request
     public function auth_token($url, $apiKey) {
@@ -341,7 +346,7 @@ class RetailExpressApiController extends BaseController
 
         $this->logs['simple'] = $simple;
     }
-    
+
     // Variable Products
     public function create_variable_products() {
 
@@ -530,8 +535,8 @@ class RetailExpressApiController extends BaseController
     }
 
     // Handle Cookies
-    public function set_cookies($value) {
-        setcookie('auth_key', $value, time() + 3600, "/", "", false, false);
+    public function set_cookies($value, $expiry) {
+        setcookie('auth_key', $value, strtotime($expiry), "/", "", false, false);
     }
 
     public function unset_cookies() { 

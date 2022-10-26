@@ -16,6 +16,8 @@ class Enqueue extends BaseController
     function enqueue() {
         wp_enqueue_style('REXstyle',  $this->plugin_url . 'assets/style.css', '', $this->mix_get_random() );
         wp_enqueue_script('REXscript', $this->plugin_url . 'assets/script.js', array( 'jquery' ), $this->mix_get_random() );
+        wp_enqueue_script('SweetAlert', 'https://unpkg.com/sweetalert/dist/sweetalert.min.js', array( 'jquery' ), $this->mix_get_random() );
+        
         wp_localize_script( 'REXscript', 'frontend_ajax_object',
 		array( 
 			'ajaxurl' => admin_url( 'admin-ajax.php' )

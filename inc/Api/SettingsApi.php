@@ -23,7 +23,7 @@ class SettingsApi
 
     // ---------------------------------------------
     public function rexpressOptions() {
-        // Update Source of truth on successful order. oso
+
         register_setting( 'rex-options-group', 'rex_update_oso' );
         register_setting( 'rex-options-group', 'rex_update_last_updated' );
 
