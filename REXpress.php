@@ -5,8 +5,8 @@
 * Plugin Name: Retail Express X WooCommerce
 * Description: Import products from Retail Express to WooCommerce.
 * Version: 0.1
-* Author: Shean Louise "Lowloy" Margallo
-* Author URI: sheanlouise.github.io
+* Author: Fligno PH
+* Author URI: fligno.com
 * License: GPLv2 or later
 * Text Domain: retail-express-x-woocommerce
 **/

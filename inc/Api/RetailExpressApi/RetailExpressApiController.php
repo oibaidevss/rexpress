@@ -40,8 +40,9 @@ class RetailExpressApiController extends BaseController
             if($this->url == null || $this->apiKey == null){
                 add_action( 'init', array($this, 'unset_cookies') );
             }
-
-            // print_r(json_encode($this->map_variable_products()));
+            // echo "<pre>";
+            // print_r(json_encode($this->get_all_products( 'variable' )));
+            // echo "</pre>";
             // die;
         }else{
             
@@ -90,13 +91,13 @@ class RetailExpressApiController extends BaseController
     }
 
     // API Request
-    public function get_products() {
+    public function get_products( $page = 1 ) {
 
-        $page_size = 200;
+        $page_size = 250;
         
         $inventory = true;
 
-        $page = isset($_REQUEST['page_number']) ? $_REQUEST['page_number'] : 2;
+        $page = isset($_REQUEST['page_number']) ? $_REQUEST['page_number'] : $page;
 
         $url    = $this->url;
         
@@ -133,111 +134,108 @@ class RetailExpressApiController extends BaseController
         
     }
 
-    public function map_products(){
-       
-        $products = $this->get_products();
-
-        $simple = [];
+    public function get_all_products( $type ) {
         
-        foreach ($products->data as $key => $product) {
+        $temp = [];
 
-            if ( count($product->custom_properties)  == 0 ) {
-
-                $d1 = !empty(get_option( 'rex_update_last_updated' )) ? strtotime(get_option( 'rex_update_last_updated' )) : strtotime(date('m/d/Y h:i:s a', time()));
-                $d2 = strtotime( $product->modified_on );
-
-                $diff = $d1 - $d2;
-                $time = ($diff/3600);
-
-
-                $simple[$key]['name'] = $product->short_description; 
-                
-                $simple[$key]['category'] = $product->product_type->name; 
-                
-                $simple[$key]['stock'] = $product->inventory[0]->quantity_available;
-                
-                $simple[$key]['sku'] = str_replace("-", " ", $product->supplier_sku);
-                
-                $simple[$key]['price'] = $product->sell_price_inc;
-
-                $simple[$key]['modified_on'] = strtotime($product->modified_on);
-                
-                $simple[$key]['_should_update'] = $time;
-
-
-            }
+        $compiled = [];
         
+        $products = $this->get_products(1);
+
+        $info = [ 'total_records' => $products->total_records, 'page_size' => $products->page_size ];
+
+        $limit = ceil($info['total_records'] / $info['page_size']);
+
+        for ( $i = 1; $i <= $limit ; $i++ ) { 
+            $products = $this->get_products($i);
+            $temp[$i] = $products->data;
         }
-
-        return $simple;
-    }
-
-    public function map_variable_products(){
-
-        $products = $this->get_products();
-
-        $variations = []; 
-        $variables  = [];
-
-        $temp_variable = [];
-        $temp_variations = [];
-
-        // variations 
-        foreach ($products->data as $key => $variation) {
-            if ( count($variation->custom_properties)  != 0 ) {
-                $variations[] = array(
-                    'key' => $key,
-                    'name' => $variation->short_description,
-                    'category' => $variation->product_type->name,
-                    'sku'   => str_replace("-", " ", $variation->supplier_sku),
-                    'price' => $variation->sell_price_inc,
-                    'stock' => $variation->inventory[0]->quantity_available,
-                    'modified_on' => strtotime($variation->modified_on),
-                    'parent' => $variation->custom_properties[0]->value,
-                    'attributes'    => array(
-                        'size' => $variation->short_description,
-                    ),
-                );
+        
+        $count = 0;
+        if( $type === "simple" ){
+            foreach($temp as $temporary){
+                foreach($temporary as $key => $product){
+                    if ( count($product->custom_properties) == 0 ) {
+                        $compiled[$count] = [
+                            'name' => $product->short_description,
+                            'category' => $product->product_type->name,
+                            'stock' => $product->inventory[0]->quantity_available,
+                            'sku' => str_replace("-", " ", $product->supplier_sku),
+                            'price' => $product->sell_price_inc
+                        ];
+                        $count++;
+                    }
+                }
             }
         }
-
-        $arr_variations = array();
-        foreach ($variations as $key => $variation)
-        {
-            $arr_variations[$key] = $variation['parent'];
-        }
-        array_multisort($arr_variations, SORT_DESC, $variations);
         
-        // variables
-        foreach ($products->data as $key => $variable) {
-            if ( count($variable->custom_properties)  != 0 ) {
-                // ? Check if the SKU is not yet added in the $temp Array.
-                if( !in_array( $variable->custom_properties[0]->value, $temp_variable ) ) {
-                   
-                    $temp_variable[] = $variable->custom_properties[0]->value;
+        if( $type === "variable" ){
 
-                    $variables[$key]['parent'] = $variable->custom_properties[0]->value;
-                    $variables[$key]['name'] = $variable->short_description;
-                    $variables[$key]['description'] = $variable->short_description;
-                    $variables[$key]['sku'] = str_replace("-", " ", $variable->custom_properties[0]->value);
-                    $variables[$key]['categories'] = $variable->product_type->name;    
+            $variations = []; 
+            $variables  = [];
+    
+            $temp_variable = [];
+            $temp_variations = [];
 
-                    foreach ($variations as $variation_key => $variation) {
-                        if( $variables[$key]['parent'] === $variation['parent'] ){
-                            $temp_variations[] = $variation;
+            foreach ($temp as $key => $temporary) {
+                foreach ($temporary as $key => $variation) {
+                    if ( count($variation->custom_properties)  != 0 ) {
+                        $variations[] = array(
+                            'key' => $key,
+                            'name' => $variation->short_description,
+                            'category' => $variation->product_type->name,
+                            'sku'   => str_replace("-", " ", $variation->supplier_sku),
+                            'price' => $variation->sell_price_inc,
+                            'stock' => $variation->inventory[0]->quantity_available,
+                            'modified_on' => strtotime($variation->modified_on),
+                            'parent' => $variation->custom_properties[0]->value,
+                            'attributes'    => array(
+                                'size' => $variation->short_description,
+                            ),
+                        );
+                    }
+                }
+            }
+
+            $arr_variations = array();
+            foreach ($variations as $key => $variation)
+            {
+                $arr_variations[$key] = $variation['parent'];
+            }
+            array_multisort($arr_variations, SORT_DESC, $variations);
+
+            foreach ($temp as $key => $temporary) {
+                foreach ($temporary as $key => $variable) {
+                    if ( count($variable->custom_properties)  != 0 ) {
+                        if( !in_array( $variable->custom_properties[0]->value, $temp_variable ) ) {
+                        
+                            $temp_variable[] = $variable->custom_properties[0]->value;
+                            
+                            $compiled[$key] = [
+                                'parent' => $variable->custom_properties[0]->value,
+                                'name' => $variable->short_description,
+                                'description' => $variable->short_description,
+                                'sku' => str_replace("-", " ", $variable->custom_properties[0]->value),
+                                'categories' => $variable->product_type->name,
+                            ];
+        
+                            foreach ($variations as $variation_key => $variation) {
+                                if( $compiled[$key]['parent'] === $variation['parent'] ){
+                                    $temp_variations[] = $variation;
+                                }
+                            }
+        
+                            $compiled[$key]['variations'] = $temp_variations;
+                            
+                            $temp_variations = [];
                         }
                     }
-
-                    $variables[$key]['variations'] = $temp_variations;
-                    
-                    $temp_variations = [];
                 }
             }
         }
 
-        // return $variations;
+        return $compiled;
 
-        return $variables;
     }
 
     // For Ajax Request
@@ -264,12 +262,6 @@ class RetailExpressApiController extends BaseController
 
         $simple   = $this->create_simple_products();
         $variable = $this->create_variable_products();
-
-        $this->count += 1;
-
-        if($this->count == $_REQUEST['total']){
-            $this->create_log_file($this->logs);
-        }
 
         echo json_encode($this->logs);
         
@@ -300,7 +292,7 @@ class RetailExpressApiController extends BaseController
     // Simple Products 
     public function create_simple_products() {
         
-        $products = $this->map_products();
+        $products = $this->get_all_products( 'simple' );
        
         $simple = [];
 
@@ -387,7 +379,7 @@ class RetailExpressApiController extends BaseController
     // Variable Products
     public function create_variable_products() {
 
-        $products = $this->map_variable_products();
+        $products = $this->get_all_products( 'variable' );
         
         $variable = [];
 
@@ -436,7 +428,7 @@ class RetailExpressApiController extends BaseController
                     
                     $variable[$key] = [
                         'name' => $product_data['name'],
-                        'sku' => $product_data['sku'],
+                        'sku'  => $product_data['sku'],
                         'type' => 'updated',
                     ];  
                 } 
@@ -492,6 +484,7 @@ class RetailExpressApiController extends BaseController
     
     function insert_product_variations ($post_id, $variations)
     {
+        $arr = [];
         foreach ($variations as $index => $variation)
         {
             $check = wc_get_product_id_by_sku($variation['sku']);
@@ -528,33 +521,46 @@ class RetailExpressApiController extends BaseController
 
                 add_post_meta( $post_id, '_updated_at', $this->time, true );
 
+                $arr[$index] = [
+                    'name' => $variation['name'],
+                    'sku'  => $variation['sku'],
+                    'type' => 'created',
+                ];  
+
             } else {
 
                 $post_id = $check;
-
                 $product = wc_get_product( $post_id );
 
+                foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
+                {
+                    $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
+                    update_post_meta($post_id, 'attribute_pa_'.$attribute, $attribute_term->slug);
+                }
                 
                 if( ($product->get_stock_quantity() != $variation['stock'] && $variation['stock'] >= 0 )|| $product->get_price() != $variation['price'] ) {
 
-                    foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
-                    {
-                        $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
-                        update_post_meta($post_id, 'attribute_pa_'.$attribute, $attribute_term->slug);
-                    }
                     
                     wc_update_product_stock($post_id, $variation['stock'], 'set');
                     
-                    update_post_meta($post_id, '_regular_price', $variation['price']);
+                    update_post_meta( $post_id, '_regular_price', $variation['price']);
                     
                     update_post_meta( $post_id, '_price', $variation['price'] );
                     
                     update_post_meta( $post_id, '_updated_at', $this->time );
-                 
+
+                    $arr[$index] = [
+                        'name' => $variation['name'],
+                        'sku' => $variation['sku'],
+                        'type' => 'updated',
+                    ];  
                 }
+                
                 
             }
         }
+
+        $this->logs['variations'] = $arr;
     }
 
     // Handle Cookies

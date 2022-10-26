@@ -2,15 +2,11 @@ jQuery(window).on('load', function() {
 
     var btn     = jQuery('#sync'); 
     var res     = jQuery('.response');
-    var current     = jQuery('._current');
-
-    var total   = 0;
-    var count   = 0;
 
     btn.find('span').hide();
+    res.hide();
 
     btn.on('click', function(){
-        
         
         swal({
             title: "Are you sure?",
@@ -25,58 +21,42 @@ jQuery(window).on('load', function() {
             
                 btn.find('span').show();
                 btn.addClass('spin');
-                res.empty();
-            
-                total = jQuery('._total').text();
+                
 
                 jQuery(function($) {
-                    for (let index = 1; index <= total; index++) {
+                    $.ajax({
+                        type : "GET",
+                        contentType: "application/json",
+                        dataType: "json",
+                        url : frontend_ajax_object.ajaxurl,
+                        data : { action: "create_woo_products" },
+                        success : function(response) {   
+                            res.empty().show();
+                            
+                            btn.find('span').hide();
 
-                        jQuery.ajax({
-                            type : "GET",
-                            contentType: "application/json",
-                            dataType: "json",
-                            url : frontend_ajax_object.ajaxurl,
-                            data : { action: "create_woo_products", page_number: index },
-                            success : function(response) {   
-                                
-                                count += 1;
-                                
-                                current.text(count);
+                            btn.removeAttr('disabled');
 
-                                if(count == total){
-                                    btn.removeAttr('disabled')
-                                        .text('Click to sync again.')
-                                        .removeClass('spin');
-                                    
-                                    btn.find('span').hide();
+                            btn.removeClass('spin');
 
-                                    console.log(response);
-                                    var counter = 0
+                            counter = 0;
+                            jQuery.each(response, function(i, v){
+                                jQuery.each(v, function ( k, value ){
+                                    res.append("<p class='value'> " + value.sku + " " + value.name + " has been <span class='"+ value.type +"'>" +  value.type  + "</span></p>");
+                                    counter++;
+                                })
+                            });
 
-                                    jQuery.each(response, function(i, v){
-                                        
-                                        jQuery.each(v, function ( k, value ){
-                                            res.append("<p class='value'> " + value.sku + " " + value.name + " has been <span class='"+ value.type +"'>" +  value.type  + "</span></p>");     
-                                            counter++
-                                        })
-                                        
-                                    })
-
-                                    res.append("<p class='value'> There are "+ counter +" products that have been updated/created.</p>");    
-                                    
-                                    swal({
-                                        title: "Awesome",
-                                        text: "You've succesfully updated the products.",
-                                        icon: "success",
-                                        button: "Aww yiss!",
-                                    });
-
-
-                                }
-                            }
-                        });
-                    }
+                            res.append("<p class='value'> There are "+ counter +" products that have been updated/created.</p>");    
+                            
+                            swal({
+                                title: "Awesome",
+                                text: "You've succesfully updated the products.",
+                                icon: "success",
+                                button: "Aww yiss!",
+                            });
+                        }
+                    });
                 });
             } else {
                 console.log('canceled');
@@ -90,24 +70,6 @@ jQuery(window).on('load', function() {
     
     if(jQuery('body').hasClass('rexpress_page_rexpress_actions')){
 
-        var records = jQuery('.total_records');
-        var action  = jQuery('._action');
-        var total   = jQuery('._total');
-
-        action.hide();
-
-        jQuery.ajax({
-            type : "GET",
-            contentType: "application/json",
-            dataType: "json",
-            url : frontend_ajax_object.ajaxurl,
-            data : { action: "get_total_records" },
-            success : function(res) {
-                action.show();
-                records.text(res.total_records);
-                total.text( Math.ceil(parseInt(res.total_records) / res.page_size) );
-            }
-        })
     }
 });
 
