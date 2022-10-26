@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'ea2727917d2dc96971b0c565734389bce89e6ad9',
+    'reference' => '2c210036a607bdb42297a004f6ced0ccc3b377f8',
     'name' => 'laptop-097/re-xpress',
   ),
   'versions' => 
@@ -18,7 +18,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'ea2727917d2dc96971b0c565734389bce89e6ad9',
+      'reference' => '2c210036a607bdb42297a004f6ced0ccc3b377f8',
     ),
     'nesbot/carbon' => 
     array (
