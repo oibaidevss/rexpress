@@ -17,6 +17,8 @@
         "nesbot/carbon": "3.x-dev"
     },
     "config": {
-        "php": ">=7"
+        "platform": {
+            "php": "8.0.24"
+        }
     }
 }
