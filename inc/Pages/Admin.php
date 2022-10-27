@@ -32,7 +32,7 @@ class Admin extends BaseController
 
         $this->settings
             ->addPages( $this->pages )
-            ->withSubPage( 'Dashboard' )
+            ->withSubPage( 'General' )
             ->addSubPages( $this->subpages )
             ->register();
     }
@@ -43,8 +43,8 @@ class Admin extends BaseController
                 'page_title' => 'REXpress Plugin',
                 'menu_title' => 'REXpress',
                 'capability' => 'manage_options',
-                'menu_slug' => 'rexpress_plugin',
-                'callback' => array( $this->callbacks, 'adminDashboard'),
+                'menu_slug' => 'rexpress_settings',
+                'callback' => array( $this->callbacks, 'adminSettings'),
                 'icon_url' => 'dashicons-controls-repeat',
                 'position' => 110,
             )
@@ -54,15 +54,7 @@ class Admin extends BaseController
     public function setSubpages() {
         $this->subpages = array(
             array(
-                'parent_slug' => 'rexpress_plugin',
-                'page_title' => 'Settings',
-                'menu_title' => 'Settings',
-                'capability' => 'manage_options',
-                'menu_slug' => 'rexpress_settings',
-                'callback' => array( $this->callbacks, 'adminSettings'),
-            ),
-            array(
-                'parent_slug' => 'rexpress_plugin',
+                'parent_slug' => 'rexpress_settings',
                 'page_title' => 'Actions',
                 'menu_title' => 'Actions',
                 'capability' => 'manage_options',

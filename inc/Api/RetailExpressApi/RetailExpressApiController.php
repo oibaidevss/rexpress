@@ -30,16 +30,13 @@ class RetailExpressApiController extends BaseController
         if ( isset( $_GET['settings-updated'] ) && $_GET['page'] == 'rexpress_settings') {
                 
             add_action( 'init', array($this, 'unset_cookies') ); // Unset Cookies
-        
+
         }
         
         if(isset($_COOKIE['auth_key'])) {
             
             add_action("wp_ajax_create_woo_products", array($this, 'create_woo_products'));
             add_action("wp_ajax_nopriv_create_woo_products", array($this, 'no_access'));
-            
-            add_action("wp_ajax_get_total_records", array($this, 'get_total_records'));
-            add_action("wp_ajax_nopriv_get_total_records", array($this, 'no_access'));
             
             if($this->url == null || $this->apiKey == null){
                 add_action( 'init', array($this, 'unset_cookies') );
@@ -56,7 +53,7 @@ class RetailExpressApiController extends BaseController
             if($this->auth_token($this->url, $this->apiKey) == NULL && $_GET['page'] == 'rexpress_settings'){
                 add_action('admin_notices', function(){
                     echo '<div class="notice notice-error is-dismissible">';
-                        echo "<p>Error! you've entered an invalid URL or API key!</p>";
+                        echo "<p><strong>Error!</strong> you've entered an invalid URL or API key!</p>";
                     echo '</div>';
                 });
             }

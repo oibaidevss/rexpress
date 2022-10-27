@@ -97,7 +97,7 @@ class SettingsApi
     }
 
     public function withSubPage( string $title = null ) {
-
+        
         if ( empty( $this->admin_pages ) ) {
             return $this;
         }
