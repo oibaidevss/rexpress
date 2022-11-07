@@ -19,7 +19,7 @@ final class init
             Base\SettingsLinks::class,
             Api\RetailExpressApi\RetailExpressApiController::class,
             Api\RetailExpressApi\RetailExpressLogs::class,
-            Api\WooCommerce\AdminProductsTable::class
+            Api\WooCommerce\ProductsController::class
         ];
     }
 

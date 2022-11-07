@@ -16,59 +16,66 @@ class SettingsApi
         
             // Activate Custom Settings
             add_action( 'admin_init', array( $this, 'rexpressAPISettings' ));
-            add_action( 'admin_init', array( $this, 'rexpressOptions' ));
         }
 
     }
 
     // ---------------------------------------------
-    public function rexpressOptions() {
+    public function rexpressAPISettings() {
 
-        register_setting( 'rex-options-group', 'rex_update_oso' );
-        register_setting( 'rex-options-group', 'rex_update_last_updated' );
+        register_setting( 'rex-settings-group', 'rex__api_url' );
+        register_setting( 'rex-settings-group', 'rex__api_api' );
+
+        register_setting( 'rex-settings-group', 'rex__last_updated' );
+        register_setting( 'rex-settings-group', 'rex__retail_express' );
+        register_setting( 'rex-settings-group', 'rex__admin_email' );
 
         add_settings_section( 
-            'rex-action-options', 
-            'Options', 
-            array( $this, 'rex_options_sub_title' ), 
+            'rex-settings-options', 
+            'Api Connection', 
+            array( $this, 'rex_options' ), 
             'rexpress_settings'
+        );
+
+        add_settings_field( 
+            'rex-api-url', 
+            'API URL', 
+            array( $this, 'rex__subscriber_api_url' ), 
+            'rexpress_settings',
+            'rex-settings-options' 
+        );
+
+        add_settings_field( 
+            'rex-api', 
+            'Subscriber API', 
+            array( $this, 'rex__subscriber_api' ), 
+            'rexpress_settings',
+            'rex-settings-options' 
+        );
+        
+        add_settings_field( 
+            'rex-update-retail-express', 
+            'Update Retail Express', 
+            array( $this, 'rex__retail_express' ), 
+            'rexpress_settings',
+            'rex-settings-options'
+        );
+        
+        add_settings_field( 
+            'rex-admin-email', 
+            'Email', 
+            array( $this, 'rex__admin_email' ), 
+            'rexpress_settings',
+            'rex-settings-options'
         );
 
         add_settings_field( 
             'rex-update-last-updated', 
             'Last Updated', 
-            array( $this, '_rex_update_last_updated' ), 
+            array( $this, 'rex__last_updated' ), 
             'rexpress_settings',
-            'rex-action-options'
+            'rex-settings-options'
         );
-
-    }
-
-    public function rex_options_sub_title() {
-        echo '<p>You will be able to control the plugin capabities with the below options. </p>';
-    }
-
-
-    public function _rex_update_last_updated() {
-        $data = esc_attr(get_option( 'rex_update_last_updated' )); 
-        
-        $el = "<input id='rex_update_last_updated' type='text' disabled='true' value='$data' name='rex_update_last_updated' />";
-        $el .= '<label for="rex_update_last_updated"> When was the <strong>"Sync Product"</strong> last run.</label>';
-
-        echo $el;
-    }
-
-    public function rexpressAPISettings() {
-
-        register_setting('rex-settings-group', 'rex__api_url' );
-
-        register_setting('rex-settings-group', 'rex__api_api' );
-
-        add_settings_section( 'rex-settings-options', 'Api Connection', array( $this, 'rex_options' ), 'rexpress_settings' );
-
-        add_settings_field( 'rex-api-url', 'API URL', array( $this, 'rex__subscriber_api_url' ), 'rexpress_settings','rex-settings-options' );
-
-        add_settings_field( 'rex-api', 'Subscriber API', array( $this, 'rex__subscriber_api' ), 'rexpress_settings','rex-settings-options' );
 
     }
 
@@ -85,6 +92,33 @@ class SettingsApi
         $apiKey = esc_attr(get_option( 'rex__api_api' )); 
         echo '<input type="text" name="rex__api_api"  value="'. $apiKey .'" placeholder="" />';
     }
+
+    public function rex__admin_email() {
+        $email = esc_attr(get_option( 'rex__admin_email' )); 
+        echo '<input type="email" name="rex__admin_email"  value="'. $email .'" placeholder="example@example.com" />';
+    }
+
+    public function rex__retail_express() {
+        $data = get_option( 'rex__retail_express' ); 
+
+        $checked = $data != '' ? 'checked' : 'unchecked';
+        
+        $el = "";
+        $el .= "<input class='wppd-ui-toggle' id='retail_express' type='checkbox'  name='rex__retail_express[retail_express]' $checked value='1'/>";
+        $el .= '<label for="retail_express">Send an update to Retail Express Administrator on every WooCommerce transactions.</label>';
+
+        echo $el;
+    }
+
+    public function rex__last_updated() {
+        $data = esc_attr(get_option( 'rex__last_updated' )); 
+        
+        $el = "<input id='rex__last_updated' type='text' disabled='true' value='$data' name='rex__last_updated' />";
+        $el .= '<label for="rex__last_updated"> When was the <strong>"Sync Product"</strong> last run.</label>';
+
+        echo $el;
+    }
+
 
     // ---------------------------------------------------
 

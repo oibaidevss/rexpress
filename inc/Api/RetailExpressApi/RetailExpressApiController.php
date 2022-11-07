@@ -159,6 +159,7 @@ class RetailExpressApiController extends BaseController
                 foreach($temporary as $key => $product){
                     if ( count($product->custom_properties) == 0 ) {
                         $compiled[$count] = [
+                            'rex_product_id' => $product->id,
                             'name' => $product->short_description,
                             'category' => $product->product_type->name,
                             'stock' => $product->inventory[0]->quantity_available,
@@ -184,6 +185,7 @@ class RetailExpressApiController extends BaseController
                     if ( count($variation->custom_properties)  != 0 ) {
                         $variations[] = array(
                             'key' => $key,
+                            'rex_product_id' => $variation->id,
                             'name' => $variation->short_description,
                             'category' => $variation->product_type->name,
                             'sku'   => str_replace("-", " ", $variation->supplier_sku),
@@ -215,6 +217,7 @@ class RetailExpressApiController extends BaseController
                             
                             $compiled[$key] = [
                                 'parent' => $variable->custom_properties[0]->value,
+                                'rex_product_id' => $variable->id,
                                 'name' => $variable->short_description,
                                 'description' => $variable->short_description,
                                 'sku' => str_replace("-", " ", $variable->custom_properties[0]->value),
@@ -258,7 +261,7 @@ class RetailExpressApiController extends BaseController
     // For Ajax Request
     public function create_woo_products( ) {
         
-        update_option( 'rex_update_last_updated', date('m/d/Y h:i:s a', time()) );
+        update_option( 'rex__last_updated', date('m/d/Y h:i:s a', time()) );
 
         $this->logs = [];
 
@@ -307,6 +310,8 @@ class RetailExpressApiController extends BaseController
     
                 wc_update_product_stock($post_id, $product['stock'] < 0 ? 0:$product['stock'], 'set');
                 
+                add_post_meta( $post_id, '_rex_product_id', $product['rex_product_id'] );
+                
                 $simple[$key] = [
                     'name' => $product['name'],
                     'sku' => $product['sku'],
@@ -317,6 +322,9 @@ class RetailExpressApiController extends BaseController
                 
                 $post_id = $check;
                 $post = wc_get_product( $post_id );
+
+                add_post_meta( $post_id, '', $product['rex_product_id'] );
+                
 
                 if( ($post->get_stock_quantity() != $product['stock'] && $product['stock'] >= 0) || $post->get_price() != $product['price'] ) 
                 {
@@ -388,6 +396,8 @@ class RetailExpressApiController extends BaseController
             }else{
 
                 $post_id = $check;
+
+                add_post_meta( $post_id, '_rex_product_id', $product_data['rex_product_id'] );
                 
                 $variations = $this->insert_product_variations($post_id, $product_data['variations']); // Insert variations passing the new post id & variations
                 $attributes = $this->insert_product_attributes($post_id, array( "size" ), $product_data['variations']); // Add attributes passing the new post id, attributes & variations
@@ -500,6 +510,9 @@ class RetailExpressApiController extends BaseController
                 $post_id = $check;
                 $product = wc_get_product( $post_id );
 
+                add_post_meta( $post_id, '_rex_product_id', $variation['rex_product_id'] );
+                
+
                 foreach ($variation['attributes'] as $attribute => $value) // Loop through the variations attributes
                 {
                     $attribute_term = get_term_by('name', $value, 'pa_'.$attribute); // We need to insert the slug not the name into the variation post meta
@@ -523,8 +536,6 @@ class RetailExpressApiController extends BaseController
                         'type' => 'updated',
                     ];  
                 }
-                
-                
             }
         }
 
@@ -538,7 +549,8 @@ class RetailExpressApiController extends BaseController
 
     public function unset_cookies() { 
         unset($_COOKIE['auth_key']); 
-        setcookie('auth_key', null, -1, '/'); 
+        setcookie('auth_key', "", -1, '/'); 
+        return;
     }
 
 }
