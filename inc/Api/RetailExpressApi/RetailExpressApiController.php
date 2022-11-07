@@ -323,7 +323,7 @@ class RetailExpressApiController extends BaseController
                 $post_id = $check;
                 $post = wc_get_product( $post_id );
 
-                add_post_meta( $post_id, '', $product['rex_product_id'] );
+                add_post_meta( $post_id, '_rex_product_id', $product['rex_product_id'] );
                 
 
                 if( ($post->get_stock_quantity() != $product['stock'] && $product['stock'] >= 0) || $post->get_price() != $product['price'] ) 

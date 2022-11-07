@@ -84,13 +84,13 @@ class SettingsApi
     }
 
     public function rex__subscriber_api_url() {
-        $apiUrl = esc_attr(get_option( 'rex__api_url' )); 
-        echo '<input type="text" name="rex__api_url"  value="'. $apiUrl .'" placeholder="https://example.com" />';
+        $url = esc_attr(get_option( 'rex__api_url' )); 
+        echo '<input type="text" name="rex__api_url"  value="'. $url .'" placeholder="https://example.com" />';
     }
 
     public function rex__subscriber_api() {
-        $apiKey = esc_attr(get_option( 'rex__api_api' )); 
-        echo '<input type="text" name="rex__api_api"  value="'. $apiKey .'" placeholder="" />';
+        $key = esc_attr(get_option( 'rex__api_api' )); 
+        echo '<input type="text" name="rex__api_api"  value="'. $key .'" placeholder="" />';
     }
 
     public function rex__admin_email() {
@@ -113,7 +113,7 @@ class SettingsApi
     public function rex__last_updated() {
         $data = esc_attr(get_option( 'rex__last_updated' )); 
         
-        $el = "<input id='rex__last_updated' type='text' disabled='true' value='$data' name='rex__last_updated' />";
+        $el = "<strong>$data</strong>";
         $el .= '<label for="rex__last_updated"> When was the <strong>"Sync Product"</strong> last run.</label>';
 
         echo $el;
